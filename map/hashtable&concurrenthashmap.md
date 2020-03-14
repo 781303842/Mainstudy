@@ -6,4 +6,14 @@
 **快速失败**  
 就是在多个线程中，若某一个线程通过迭代器去遍历集合的时候，数据被其它线程所修改，那么就会跑出ConcurrentModificationException异常，快速失败的原理如下：java.util包下的集合类都是快速失败的，比如arraylist使用了一个modcount变量来记录对集合的add或者remove值，某个线程在next操作前都会判断modcount的是否等于expectedmodCount，如果不等于则抛出异常。还有一种情况按照网上的说法，如果修改集合的同时修改了expectedmodCount为之前的值，那么也不会抛出异常（待求证），因此也就不能用是否抛出异常来表示是否线程正确执行了。这里hashmap和hashtable都会抛出这个异常。 如何解决了，只需要将java.util换成java.util.concurrent即可。同时还有一个点要注意iterator的remove会更新迭代器的exceptModCount  所以不会抛出CME，而hashtable的remove不会修改，所以会抛出异常。  
 **安全失败**  
-java.util.concurrent包下的容器都是安全失败，可以在多线程下并发使用。安全失败在遍历首先是复制一份集合数据，在拷贝的数据上进行操作，缺点也很明显就是遍历期间的修改是不可见的。我们举concurrenthashmap来说明这个问题
+java.util.concurrent包下的容器都是安全失败，可以在多线程下并发使用。安全失败在遍历首先是复制一份集合数据，在拷贝的数据上进行操作，缺点也很明显就是遍历期间的修改是不可见的。  
+### 3 jdk1.7与jdk1.8下的concurrenthashmap  
+在jdk1.7中concurrenthashmap的数据结构为segments+hashentry也就是数组+链表，hashentry采用了violate修饰value和next，因此可以用segment作为锁的粒度，而默认的大小为16，所以可以最多支持16个线程同时安全的访问；另外segment作为一个类它实现了ReentrantLock，也就是实现了锁，比如现在执行一个put操作，第一次hash定位到segment通过CAS操作去赋值，如果成功再哈希一次定位到hashentry的位置，插入之前通过reentrantlock的trylock方法去锁住该segment，如果lock成功则直接插入，失败则已有线程锁住了segment，该线程开始自旋，如果自旋达到了指定次数则会被挂起，等待唤醒。如何统计并发情况下的size，可以对所有segment加锁后统计。  
+在jdk1.8中concurrenthashmap的数据结构改为了node+hashentry+红黑树，`此外它的初始化是在put操作的时候`，关于concurrenthashmap的get过程，先hash key得到hash值，然后如果是node中的首节点则直接返回，如果不是则要么按链表要么按红黑树的方式去查询，得到value。put过程比较复杂，  
+1.首先如果node没有初始化则会先初始化  
+2.hash key得到index，如果该位置没有数据则通过CAS操作插入  
+3.如果在扩容，则先扩容  
+4.如果都不满足，也就是说hash冲突了，那么通过Synchronized对数据加锁，再插入  
+5.如果是链表则链表插入，如果是红黑树则按红黑树  
+6.如果当插入链表的节点数大于了7，则将链表转变为红黑树  
+另外扩容的时候是多个线程一起处理的，每处理一个节点就要节点标记为已处理。
