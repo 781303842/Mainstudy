@@ -8,7 +8,7 @@
 **安全失败**  
 java.util.concurrent包下的容器都是安全失败，可以在多线程下并发使用。安全失败在遍历首先是复制一份集合数据，在拷贝的数据上进行操作，缺点也很明显就是遍历期间的修改是不可见的。  
 ### 3 jdk1.7与jdk1.8下的concurrenthashmap  
-在jdk1.7中concurrenthashmap的数据结构为segments+hashentry也就是数组+链表，hashentry采用了violate修饰value和next；可以用segment作为锁的粒度，而默认的大小为16，所以可以最多支持16个线程同时安全的访问；另外segment作为一个类它实现了ReentrantLock，也就是实现了锁，比如现在执行一个put操作，第一次hash定位到segment通过CAS操作去赋值，如果成功再哈希一次定位到hashentry的位置，插入之前通过reentrantlock的trylock方法去锁住该segment，如果lock成功则直接插入，失败则已有线程锁住了segment，该线程开始自旋，如果自旋达到了指定次数则会被挂起，等待唤醒。如何统计并发情况下的size，可以对所有segment加锁后统计。（上述内容部分待求证）  
+在jdk1.7中concurrenthashmap的数据结构为segments+hashentry也就是数组+链表，hashentry采用了violate修饰value和next；可以用segment作为锁的粒度，而默认的大小为16，所以可以最多支持16个线程同时安全的访问，通过分段锁来实现线程安全；另外segment作为一个类它实现了ReentrantLock，也就是实现了锁，比如现在执行一个put操作，尝试自旋获取锁。如果重试的次数达到了 MAX_SCAN_RETRIES 则改为阻塞锁获取，保证能获取成功。如何统计并发情况下的size，可以对所有segment加锁后统计。（上述内容部分待求证）  
 在jdk1.8中concurrenthashmap的数据结构改为了node（实现了map.entry）+红黑树，说白了就是node组成的数组或者链表加上红黑树，大于等于8的时候转为红黑树，小于等于6就是拆为链表，默认容量是16。`此外它的初始化是在put操作的时候`，关于concurrenthashmap的get过程，先hash key得到hash值再做扰动计算，如果index在node中的首节点有数据则直接返回，如果不是则要么按链表要么按红黑树的方式去查询，得到value。put过程比较复杂，  
 1.首先如果node没有初始化则会先初始化  
 2.hash key得到index，如果该位置没有数据则通过CAS操作插入  
