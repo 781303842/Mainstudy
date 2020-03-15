@@ -1,7 +1,7 @@
 # jdk1.7下hashmap&hashtable&concurrenthashmap  
 | 信息/操作 | hashmap | hashtable | concurrenthashmap |
 | :----: | :----: | :----:| :----: |
-| 线程安全 | 线程不安全 | 线程安全，给所有方法都加synchronize | 线程安全，用分段锁+CAS实现 |
+| 线程安全 | 线程不安全 | 线程安全，给所有方法都加synchronize | 线程安全，用分段锁+CAS+volatile实现 |
 | 数据结构 | 数据+链表 | 数据+链表 | segments+hashentry，也可以理解为数组+链表 |
 | 默认初始值 | 默认数组大小为16，扩容按2的倍数来 | 默认大小为11，扩容按当前2倍再加1 | segments默认16，segments下的hashentry的数量默认为2|
 | key和value是否可以为空 | 可以 | 不可以 | 不可以 |
@@ -12,9 +12,12 @@
 # jdk1.8下hashmap&hashtable&concurrenthashmap的变化  
 | 信息/操作 | hashmap | hashtable | concurrenthashmap |
 | :----: | :----: | :----:| :----: |
-| 线程安全 | 线程不安全 | 线程安全，给所有方法都加synchronize | 线程安全，用更加细化的分段锁+CAS实现 |
+| 线程安全 | 线程不安全 | 线程安全，给所有方法都加synchronize | 线程安全，用synchronize+CAS+violate实现 |
 | 数据结构 | 增加了红黑树 | 无 | 抛弃了segment和entry，改用node，也增加了红黑树 |
-| get操作 | 1.先取到每个Node数组中的hash（key）与运算后的元素 2.判断刚刚取得元素是不是满足要求，是的直接返回 3.如果不满足，判断next是否为null，不是再判断是否为TreeNode，是的话则用红黑树的方式进行搜索4.如果是链表则通过while循环遍历再返回 5.如果都没找到返回null | 无变化 |hfh |
+| get操作 | 1.先取到每个Node数组中的hash（key）与运算后的元素 2.判断刚刚取得元素是不是满足要求，是的直接返回 3.如果不满足，判断next是否为null，不是再判断是否为TreeNode，是的话则用红黑树的方式进行搜索4.如果是链表则通过while循环遍历再返回 5.如果都没找到返回null | 无变化 | 暂未看懂 |
+| put操作 | 1.如果node的计算的index位置没有元素，直接新建一个元素 2.判断是不是treenode，是则按红黑树的方式查找 3.不是则通过链表；对于上述的过程如果有key存在直接覆盖，key不存在，直接插入，对于链表的插入还要判断是否插入后的链表大于等于8，需要转为红黑树；或者数组扩容等等|未看出明细变化|1.key或者value为空，直接抛出异常 2.table未初始化需要初始化 3.判断table[index]是否有值，没有通过CAS操作插入 3.如果是链表按链表put 4.如果是红黑树则按红黑树put 5.再判断是否需要链表变成红黑树的操作|
+| 额外关注 | 在jdk1.8中采用尾插法解决了扩容死锁问题| | |
+
 
 
 
