@@ -4,11 +4,11 @@
 定4个物品**体积数组为col[2,3,4,5],价值数组为val[3,4,5,6]**，背包的容积为8，求如何在容积为8的背包中能拿走的最大价值.一上来我就想能不能定义好状态，仔细
 观察一番后发现我们可以设MaxValue（i,c）,表示前i个物品在容积c下取得的最大价值。状态转移方程为  
 ***
-```math
-MaxValue（i,c)=
-\begin{cases}
-MaxValue（i-1,c）,第i个物品装不下\\
-MaxValue（i-1,c-col[i]）+val[i],第i个物品装的下
-\end{cases}
-```
-
+$$
+\mathbf{V}_1 \times \mathbf{V}_2 =  \begin{vmatrix} 
+\mathbf{i} & \mathbf{j} & \mathbf{k} \\
+\frac{\partial X}{\partial u} &  \frac{\partial Y}{\partial u} & 0 \\
+\frac{\partial X}{\partial v} &  \frac{\partial Y}{\partial v} & 0 \\
+\end{vmatrix}
+${$tep1}{\style{visibility:hidden}{(x+1)(x+1)}}
+$$
