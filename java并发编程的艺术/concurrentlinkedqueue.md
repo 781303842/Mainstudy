@@ -1,5 +1,5 @@
 # concurrentlinkedqueue 学习记录  
-1.并发编程中为了保证线程队列的安全，需要采取一些措施，本文先讲非阻塞的，即通过CAS(compare and set)机制，这是一个通过硬件实现的原子操作，原子性可以粗暴的理解为同时只能有一个线程执行。这里直接上Doug lea大神入队的代码。
+1.并发编程中为了保证线程队列的安全，需要采取一些措施，本文先讲非阻塞的，即通过CAS(compare and set)机制【不考虑ABA问题，假定不存在ABA问题，版本号等都是可以解决ABA问题】，这是一个通过硬件实现的原子操作，原子性可以粗暴的理解为同时只能有一个线程执行。这里直接上Doug lea大神入队的代码。
 ```
 public boolean offer(E e) {
     if (e == null) throw new NullPointerException();
