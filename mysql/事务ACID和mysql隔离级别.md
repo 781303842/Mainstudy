@@ -24,6 +24,7 @@ mysql中引擎有innodb，MyISAM，memory。下面的讲解默认在innodb下面
 gap lock（间隙锁）：给数据区间范围上锁。可能导致死锁，比如  
 - 事务1：第一条select语句锁A索引，第二条seelct语句锁B索引。
 - 事务2：第一条seelct语句锁B索引，第二条select语句锁A索引。  
+- 解决死锁：有粗暴的思路，将事务一次需要的资源全部加上锁。
 
 next-key lock：是record lock和gap lock的组合，既锁住记录本身还锁住索引之间的间隙。  
 
