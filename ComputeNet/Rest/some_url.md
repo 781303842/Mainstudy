@@ -7,9 +7,8 @@
 4.TCP 协议规定SYN报文虽然不携带数据， 但是也要消耗1个序列号， 所以前两次握手客户端和服务端都需要向对方回复 x+1 或 y+1
 **一些常见的问题**  
 1.为什么tcp是三次握手不是两次握手。  
-标准答案：The principle reason for the three-way handshake is to prevent old duplicate connection initiations from causing confusion. 简单来说，三次握手的首要原因是为了防止旧的重复连接初始化造成混乱。
-现在先来看看两次握手会有什么问题，1.客户机A发送一个连接请求建立报文（由于网络不好，可能发了多个连接报文）。2.服务机成功收到某一个后回复确认报文，并认为和客户机建立了联系。  
-因为http是无状态的，关于session，cookie，token等会在最后详细解释，所以对于服务机而言没办法只能把每一个请求都当成全新的连接请求
+标准答案：The principle reason for the three-way handshake is to prevent old duplicate connection initiations from causing confusion. 简单来说，三次握手的首要原因是为了防止旧的重复连接初始化造成混乱。因为http是无状态的，关于session，cookie，token等会在最后详细解释，所以对于服务机而言没办法只能把每一个请求都当成全新的连接请求。  
+具体原因：此时因为client没有发起建立连接请求，所以client处于CLOSED状态，接受到任何包都会丢弃，谢希仁举的例子就是这种场景。但是如果服务器发送对这个延误的旧连接报文的确认的同时，客户端调用connect函数发起了连接，就会使客户端进入SYN_SEND状态，当服务器那个对延误旧连接报文的确认传到客户端时，因为客户端已经处于SYN_SEND状态，所以就会使客户端进入ESTABLISHED状态，此时服务器端反而丢弃了这个重复的通过connect函数发送的SYN包，见第三个图。而连接建立之后，发送包由于SEQ是以被丢弃的SYN包的序号为准，而服务器接收序号是以那个延误旧连接SYN报文序号为准，导致服务器丢弃后续发送的数据包
 ## 四次挥手  
 释放连接的过程就比较复杂了，之所以比三次握手复杂一些，在于某一些操作可能未执行完毕或者为了安全释放连接起见。如下  
 1.客户端发起释放连接请求，发送FIN=1，seq=c,然后处理处于FIN_AWAIT1状态  
