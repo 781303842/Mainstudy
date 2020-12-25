@@ -61,4 +61,8 @@ HTTP 功能上的不足可通过创建一套全新的协议来弥补。http的�
 
 # 针对web的攻击  
 1.跨站脚本攻击（Cross-Site Scripting，XSS）是指通过存在安全漏洞的Web 网站注册用户的浏览器内运行非法的 HTML 标签或 JavaScript 进行的一种攻击。比如我在某个文本字段上加上<s></s>让字段产生下划线，这样只是演示可能会被攻击。更严重的是可以在url地址中加入script脚本获取用户名和密码后直接发送到攻击者网站。所以一般不要点来路不明的网站链接。同时cookie等信息也有可能被窃取。  
-![cookie攻击](https://github.com/781303842/Mainstudy/blob/master/ALLIMG/cookie%E6%94%BB%E5%87%BB.png)
+![cookie攻击](https://github.com/781303842/Mainstudy/blob/master/ALLIMG/cookie%E6%94%BB%E5%87%BB.png)  
+
+2.sql注入攻击，这就比较简单了，比如在登录验证的时候，密码输入or 1=1 #(mysql #是注释符),假设后台验证sql为 select * from user where name=''1=1 #' and pass='xx',所以绕过登录了。  
+
+3.会话管理不好引起的攻击，通过XSS拿到cookie中存放的sessionid，如果是通过cookie/sesion来做会话管理。
